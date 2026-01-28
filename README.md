@@ -2,6 +2,8 @@
 
 Shimmer text effect for terminal UIs built with ratatui.
 
+![""](./resources/tui-shimmer.gif)
+
 ## Usage
 
 ```rust
