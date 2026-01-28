@@ -1,0 +1,14 @@
+[package]
+name = "tui-shimmer"
+version = "0.1.0"
+edition = "2021"
+authors = ["Vinh Nguyen <vinhnguyen2308@gmail.com>"]
+license = "MIT"
+description = "Shimmer text effect for terminal UIs."
+readme = "README.md"
+homepage = "https://github.com/vinhnx/tui-shimmer"
+repository = "https://github.com/vinhnx/tui-shimmer"
+documentation = "https://docs.rs/tui-shimmer"
+
+[dependencies]
+ratatui = { version = "0.30", default-features = false }
