@@ -1,8 +1,10 @@
 # tui-shimmer
 
-Shimmer text effect for terminal UIs built with ratatui.
+Shimmer text effect for terminal UIs for [Ratatui](https://ratatui.rs/).
 
-![""](./resources/tui-shimmer.gif)
+![gif](https://raw.githubusercontent.com/vinhnx/vtcode/main/resources/gif/vtcode.gif)
+
+Demo usage from my [VT Code](https://github.com/vinhnx/vtcode) coding agent.
 
 ## Usage
 
