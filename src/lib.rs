@@ -12,6 +12,29 @@ fn elapsed_since_start() -> Duration {
     start.elapsed()
 }
 
+/// Creates a shimmer text effect for terminal UIs.
+///
+/// This function takes a text string and a base style, then returns a vector of styled spans
+/// that create a moving shimmer effect. The shimmer appears to sweep across the text from
+/// left to right in a continuous loop.
+///
+/// # Arguments
+///
+/// * `text` - The text to apply the shimmer effect to
+/// * `base_style` - The base style to use for the text, the shimmer effect will blend from this
+///
+/// # Returns
+///
+/// A vector of `Span` elements with dynamically applied styles to create the shimmer effect
+///
+/// # Example
+///
+/// ```rust
+/// use ratatui::style::Style;
+/// use tui_shimmer::shimmer_spans_with_style;
+///
+/// let spans = shimmer_spans_with_style("Loading...", Style::default());
+/// ```
 pub fn shimmer_spans_with_style(text: &str, base_style: Style) -> Vec<Span<'static>> {
     let chars: Vec<char> = text.chars().collect();
     if chars.is_empty() {
