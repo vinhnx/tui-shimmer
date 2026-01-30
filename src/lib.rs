@@ -4,12 +4,42 @@ use std::time::{Duration, Instant};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::Span;
 
+const SHIMMER_PADDING: usize = 10;
+const SHIMMER_SWEEP_SECONDS: f32 = 2.0;
+const BAND_HALF_WIDTH: usize = 5;
+
 static PROCESS_START: OnceLock<Instant> = OnceLock::new();
 static TRUECOLOR_CACHE: OnceLock<bool> = OnceLock::new();
+static INTENSITY_LUT: OnceLock<Vec<f32>> = OnceLock::new();
 
 fn elapsed_since_start() -> Duration {
     let start = PROCESS_START.get_or_init(Instant::now);
     start.elapsed()
+}
+
+fn intensity_lut() -> &'static [f32] {
+    INTENSITY_LUT.get_or_init(|| {
+        let mut values = Vec::with_capacity(BAND_HALF_WIDTH + 1);
+        let band_half_width = BAND_HALF_WIDTH as f32;
+        for dist in 0..=BAND_HALF_WIDTH {
+            let intensity = if band_half_width > 0.0 {
+                let x = std::f32::consts::PI * (dist as f32 / band_half_width);
+                0.5 * (1.0 + x.cos())
+            } else {
+                0.0
+            };
+            values.push(intensity);
+        }
+        values
+    })
+}
+
+fn shimmer_phase_from_elapsed() -> f32 {
+    if SHIMMER_SWEEP_SECONDS <= 0.0 {
+        return 0.0;
+    }
+    let elapsed = elapsed_since_start().as_secs_f32() / SHIMMER_SWEEP_SECONDS;
+    elapsed.rem_euclid(1.0)
 }
 
 /// Creates a shimmer text effect for terminal UIs.
@@ -36,37 +66,43 @@ fn elapsed_since_start() -> Duration {
 /// let spans = shimmer_spans_with_style("Loading...", Style::default());
 /// ```
 pub fn shimmer_spans_with_style(text: &str, base_style: Style) -> Vec<Span<'static>> {
-    let chars: Vec<char> = text.chars().collect();
-    if chars.is_empty() {
+    shimmer_spans_with_style_at_phase(text, base_style, shimmer_phase_from_elapsed())
+}
+
+/// Creates a shimmer effect at a fixed phase (0.0..1.0).
+///
+/// This is useful for driving animation from an external frame/tick source to avoid
+/// time-based jumps under heavy CPU load.
+pub fn shimmer_spans_with_style_at_phase(
+    text: &str,
+    base_style: Style,
+    phase: f32,
+) -> Vec<Span<'static>> {
+    let char_count = text.chars().count();
+    if char_count == 0 {
         return Vec::new();
     }
 
-    // Use time-based sweep synchronized to process start.
-    let padding = 10usize;
-    let period = chars.len() + padding * 2;
-    let sweep_seconds = 2.0f32;
-    let pos_f =
-        (elapsed_since_start().as_secs_f32() % sweep_seconds) / sweep_seconds * period as f32;
-    let pos = pos_f as isize;
+    let phase = phase.rem_euclid(1.0);
+    let period = char_count + SHIMMER_PADDING * 2;
+    let pos = (phase * period as f32) as isize;
 
     let base_rgb = base_style
         .fg
         .and_then(color_to_rgb)
         .unwrap_or((128, 128, 128));
     let highlight_rgb = (255, 255, 255);
-    let band_half_width = 5.0f32;
     let has_true_color = supports_true_color();
+    let lut = intensity_lut();
 
-    let mut spans = Vec::with_capacity(chars.len());
-    for (index, ch) in chars.iter().enumerate() {
-        let i_pos = index as isize + padding as isize;
-        let dist = (i_pos - pos).abs() as f32;
-        let intensity = if dist <= band_half_width {
-            let x = std::f32::consts::PI * (dist / band_half_width);
-            0.5 * (1.0 + x.cos())
-        } else {
-            0.0
-        };
+    let mut spans = Vec::with_capacity(char_count);
+    let mut buffer = String::new();
+    let mut current_style: Option<Style> = None;
+
+    for (index, ch) in text.chars().enumerate() {
+        let i_pos = index as isize + SHIMMER_PADDING as isize;
+        let dist = (i_pos - pos).abs() as usize;
+        let intensity = if dist <= BAND_HALF_WIDTH { lut[dist] } else { 0.0 };
 
         let style = if has_true_color {
             let highlight = intensity.clamp(0.0, 1.0) * 0.9;
@@ -84,7 +120,25 @@ pub fn shimmer_spans_with_style(text: &str, base_style: Style) -> Vec<Span<'stat
             style_for_level(intensity, base_style)
         };
 
-        spans.push(Span::styled(ch.to_string(), style));
+        let same_style = current_style
+            .as_ref()
+            .is_some_and(|current| current == &style);
+        if !same_style {
+            if let Some(prev_style) = current_style.take() {
+                if !buffer.is_empty() {
+                    spans.push(Span::styled(buffer, prev_style));
+                    buffer = String::new();
+                }
+            }
+            current_style = Some(style);
+        }
+        buffer.push(ch);
+    }
+
+    if let Some(final_style) = current_style {
+        if !buffer.is_empty() {
+            spans.push(Span::styled(buffer, final_style));
+        }
     }
 
     spans
