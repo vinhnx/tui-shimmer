@@ -2,9 +2,7 @@
 
 Shimmer text effect for terminal UIs for [Ratatui](https://ratatui.rs/).
 
-+ Libs.rs: https://lib.rs/crates/tui-shimmer
-+ Docs.rs: https://docs.rs/tui-shimmer/latest/tui_shimmer/
-+ Crates.io: https://crates.io/crates/tui-shimmer
+[Libs.rs](https://lib.rs/crates/tui-shimmer) | [Docs.rs](https://docs.rs/tui-shimmer/latest/tui_shimmer/) | [Crates.io](https://crates.io/crates/tui-shimmer)
 
 ![gif](https://raw.githubusercontent.com/vinhnx/vtcode/main/resources/gif/vtcode.gif)
 
