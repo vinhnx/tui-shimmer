@@ -4,7 +4,7 @@
 [![Docs.rs](https://img.shields.io/badge/Docs.rs-documentation-informational?logo=docsdotrs)](https://docs.rs/tui-shimmer/latest/tui_shimmer/)
 [![Crates.io](https://img.shields.io/crates/v/tui-shimmer.svg)](https://crates.io/crates/tui-shimmer)
 
-Shimmer text effect for terminal UIs for [Ratatui](https://ratatui.rs/).
+Shimmer text effect for [Ratatui](https://ratatui.rs/).
 
 ---
 
