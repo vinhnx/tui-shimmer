@@ -1,120 +1,120 @@
 # tui-shimmer
 
-[![Lib.rs](https://img.shields.io/badge/Lib.rs-crate-informational?logo=rust)](https://lib.rs/crates/tui-shimmer)
-[![Docs.rs](https://img.shields.io/badge/Docs.rs-documentation-informational?logo=docsdotrs)](https://docs.rs/tui-shimmer/latest/tui_shimmer/)
 [![Crates.io](https://img.shields.io/crates/v/tui-shimmer.svg)](https://crates.io/crates/tui-shimmer)
+[![Docs.rs](https://img.shields.io/badge/Docs.rs-documentation-informational)](https://docs.rs/tui-shimmer/latest/tui_shimmer/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Shimmer text effect for [Ratatui](https://ratatui.rs/).
+A shimmer text effect for [Ratatui](https://ratatui.rs/) terminal UIs.
+
+![tui-shimmer demo](resources/tui-shimmer.gif)
+
+> Used in [VT Code](https://github.com/vinhnx/vtcode) for animated loading states.
+
+Part of the [Ratatui](https://ratatui.rs/) ecosystem -- see
+[awesome-ratatui](https://github.com/ratatui/awesome-ratatui) for more
+community widgets and tools.
 
 ---
 
-![gif](https://raw.githubusercontent.com/vinhnx/vtcode/main/resources/gif/vtcode.gif)
-
-Demo usage from my [VT Code](https://github.com/vinhnx/vtcode) coding agent.
-
----
-
-## Features
-
-- Smooth shimmer animation effect
-- True color support with fallbacks
-- Lightweight and efficient
-- Seamless integration with Ratatui
-
-## Installation
-
-Add this to your `Cargo.toml`:
+## Quick Start
 
 ```toml
 [dependencies]
 tui-shimmer = "0.1"
 ```
 
-## Usage
-
-### Basic Usage
+**Minimal integration** -- call `shimmer_spans_with_style` inside your draw loop:
 
 ```rust
-use ratatui::style::Style;
+use ratatui::style::{Color, Style};
 use tui_shimmer::shimmer_spans_with_style;
 
-// Create shimmer effect with default style
-let spans = shimmer_spans_with_style("Loading...", Style::default());
-
-// Or with custom style
-use ratatui::style::Color;
-let custom_style = Style::default().fg(Color::Blue);
-let spans = shimmer_spans_with_style("Processing...", custom_style);
+fn draw_loading(f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
+    let spans = shimmer_spans_with_style("Loading...", Style::default().fg(Color::Cyan));
+    let paragraph = ratatui::widgets::Paragraph::new(spans);
+    f.render_widget(paragraph, area);
+}
 ```
 
-### Advanced Usage
+The shimmer phase is driven by an internal monotonic clock. The effect sweeps
+left-to-right every 2 seconds and loops automatically.
 
-For more control over the animation timing, you can use `shimmer_spans_with_style_at_phase`:
+---
 
-```rust
-use ratatui::style::Style;
-use tui_shimmer::shimmer_spans_with_style_at_phase;
+## API
 
-// Control the animation phase manually (0.0 to 1.0)
-let phase = 0.5; // Middle of the animation cycle
-let spans = shimmer_spans_with_style_at_phase("Custom Phase...", Style::default(), phase);
+| Function | Use when |
+|---|---|
+| `shimmer_spans_with_style(text, base_style)` | Default. Phase derived from elapsed time. |
+| `shimmer_spans_with_style_at_phase(text, base_style, phase)` | You control timing externally (game loop, manual tick, etc.). `phase` is `0.0..1.0`. |
+
+Both return `Vec<Span<'static>>` -- render it directly in a `Paragraph` or
+compose with other `Line`/`Text` content.
+
+### Choosing a phase source
+
+```
+shimmer_spans_with_style          -- self-timed, zero setup
+shimmer_spans_with_style_at_phase -- use when your app already has a frame clock
+                                    (avoids double-elapsed-time drift under load)
 ```
 
-### Complete Example
+---
 
-Here's a complete example showing how to integrate tui-shimmer into a Ratatui application:
+## Full Example
 
 ```rust
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{
-    backend::{Backend, CrosstermBackend},
+    backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
-    text::Span,
     widgets::{Block, Paragraph},
-    Frame, Terminal,
+    Terminal,
 };
 use std::{
     io::{self, stdout},
     time::{Duration, Instant},
 };
-use tui_shimmer::shimmer_spans_with_style;
+use tui_shimmer::shimmer_spans_with_style_at_phase;
 
-struct App {
-    start_time: Instant,
-}
-
-impl App {
-    fn new() -> Self {
-        Self {
-            start_time: Instant::now(),
-        }
-    }
-
-    fn get_animation_phase(&self) -> f32 {
-        let elapsed = self.start_time.elapsed().as_secs_f32();
-        // Cycle every 2 seconds
-        (elapsed / 2.0) % 1.0
-    }
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Setup terminal
+fn main() -> io::Result<()> {
     enable_raw_mode()?;
     let mut stdout = stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
 
-    // Create app and run it
-    let app = App::new();
-    let res = run_app(&mut terminal, app);
+    let start = Instant::now();
+    loop {
+        let phase = (start.elapsed().as_secs_f32() / 2.0).rem_euclid(1.0);
+        terminal.draw(|f| {
+            let area = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Percentage(100)])
+                .split(f.size())[0];
 
-    // Restore terminal
+            let spans = shimmer_spans_with_style_at_phase(
+                "Welcome to tui-shimmer!",
+                Style::default().fg(Color::Cyan),
+                phase,
+            );
+            let paragraph = Paragraph::new(spans)
+                .block(Block::bordered().title("Demo"))
+                .centered();
+            f.render_widget(paragraph, area);
+        })?;
+
+        if event::poll(Duration::from_millis(16))?
+            && matches!(event::read()?, Event::Key(k) if matches!(k.code, KeyCode::Char('q') | KeyCode::Esc))
+        {
+            break;
+        }
+    }
+
     disable_raw_mode()?;
     execute!(
         terminal.backend_mut(),
@@ -122,47 +122,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         DisableMouseCapture
     )?;
     terminal.show_cursor()?;
-
-    if let Err(err) = res {
-        println!("{err:?}");
-    }
     Ok(())
-}
-
-fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
-    loop {
-        terminal.draw(|f| ui(f, &app))?;
-
-        if event::poll(Duration::from_millis(16))? {
-            if let event::Event::Key(key) = event::read()? {
-                if key.code == event::KeyCode::Char('q') || key.code == event::KeyCode::Esc {
-                    return Ok(());
-                }
-            }
-        }
-    }
-}
-
-fn ui(f: &mut Frame, app: &App) {
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(1)
-        .constraints([Constraint::Percentage(100)].as_ref())
-        .split(f.size());
-
-    // Create shimmer text with custom style
-    let shimmer_text = "Welcome to tui-shimmer demo!";
-    let shimmer_spans = shimmer_spans_with_style(shimmer_text, Style::default().fg(Color::Cyan));
-
-    let paragraph = Paragraph::new(shimmer_spans)
-        .block(Block::bordered().title("Shimmer Effect Demo"))
-        .centered();
-
-    f.render_widget(paragraph, chunks[0]);
 }
 ```
 
-## API Stability
+---
 
-The public API is experimental until 1.0. Expect occasional breaking changes
-in minor releases.
+## Terminal Compatibility
+
+- **True-color terminals** (most modern terminals): full RGB shimmer blend.
+- **256-color / 16-color terminals**: automatic fallback to bold/grey ramp.
+- Respects the [NO_COLOR](https://no-color.org/) and `CLICOLOR`/`CLICOLOR_FORCE` environment variables.
+
+---
+
+## License
+
+MIT
