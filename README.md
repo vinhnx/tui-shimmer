@@ -6,7 +6,7 @@
 
 A shimmer text effect for [Ratatui](https://ratatui.rs/) terminal UIs.
 
-![tui-shimmer demo](resources/tui-shimmer.gif)
+![tui-shimmer demo](resources/vtcode.gif)
 
 > Used in [VT Code](https://github.com/vinhnx/vtcode) for animated loading states.
 
@@ -43,9 +43,9 @@ left-to-right every 2 seconds and loops automatically.
 
 ## API
 
-| Function | Use when |
-|---|---|
-| `shimmer_spans_with_style(text, base_style)` | Default. Phase derived from elapsed time. |
+| Function                                                     | Use when                                                                             |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `shimmer_spans_with_style(text, base_style)`                 | Default. Phase derived from elapsed time.                                            |
 | `shimmer_spans_with_style_at_phase(text, base_style, phase)` | You control timing externally (game loop, manual tick, etc.). `phase` is `0.0..1.0`. |
 
 Both return `Vec<Span<'static>>` -- render it directly in a `Paragraph` or
@@ -53,10 +53,13 @@ compose with other `Line`/`Text` content.
 
 ### Choosing a phase source
 
-```
-shimmer_spans_with_style          -- self-timed, zero setup
-shimmer_spans_with_style_at_phase -- use when your app already has a frame clock
-                                    (avoids double-elapsed-time drift under load)
+```rust
+// -- self-timed, zero setup
+shimmer_spans_with_style
+
+// -- use when your app already has a frame clock
+// (avoids double-elapsed-time drift under load)
+shimmer_spans_with_style_at_phase
 ```
 
 ---
