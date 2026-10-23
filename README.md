@@ -2,13 +2,15 @@
 
 [![Crates.io](https://img.shields.io/crates/v/tui-shimmer.svg)](https://crates.io/crates/tui-shimmer)
 [![Docs.rs](https://img.shields.io/badge/Docs.rs-documentation-informational)](https://docs.rs/tui-shimmer/latest/tui_shimmer/)
-[![License: MIT and Apache-2.0](https://img.shields.io/badge/License-MIT%20%2B%20Apache--2.0-blue.svg)](#license)
+[![License: MIT and Apache-2.0](https://img.shields.io/badge/License-MIT%20%2B%20Apache--2.0-blue.svg)](#license-and-attribution)
 
 A shimmer text effect for [Ratatui](https://ratatui.rs/) terminal UIs.
 
-![tui-shimmer demo](resources/vtcode.gif)
+![VT Code terminal demo featuring tui-shimmer](resources/vtcode.gif)
 
-> Used in [VT Code](https://github.com/vinhnx/vtcode) for animated loading states.
+`tui-shimmer` is integrated into [VT Code](https://github.com/vinhnx/VTCode),
+a terminal coding agent maintained by the author of this crate. The demo above
+shows the library in a working application.
 
 Part of the [Ratatui](https://ratatui.rs/) ecosystem -- see
 [awesome-ratatui](https://github.com/ratatui/awesome-ratatui) for more
@@ -139,13 +141,26 @@ fn main() -> io::Result<()> {
 
 ---
 
-## License
+## License and attribution
 
-This crate contains MIT-licensed code and code adapted from OpenAI Codex under
-the Apache License 2.0. See [LICENSE](LICENSE), [LICENSE-APACHE](LICENSE-APACHE),
+This crate combines the existing MIT-licensed implementation with portions
+adapted from OpenAI Codex under Apache-2.0. The package metadata declares
+`MIT AND Apache-2.0`; see [LICENSE](LICENSE), [LICENSE-APACHE](LICENSE-APACHE),
 and [NOTICE](NOTICE).
 
-The grapheme-aware shimmer sweep is adapted from OpenAI Codex's
-[`summary_shimmer.rs`](https://github.com/openai/codex/blob/71b38795d83f230206098b265c67707e1fb28769/codex-rs/tui/src/summary_shimmer.rs)
-(Copyright 2025 OpenAI). This adaptation uses this crate's phase-driven API, color
-handling, and fallback behavior.
+The grapheme-aware sweep adapts OpenAI Codex's
+[`summary_shimmer.rs`](https://github.com/openai/codex/blob/71b38795d83f230206098b265c67707e1fb28769/codex-rs/tui/src/summary_shimmer.rs),
+Copyright 2025 OpenAI. The adaptation is marked in the source and changes the
+timing and positioning to fit this crate's phase-driven API, color handling, and
+fallback behavior. The OpenAI notice applies to those adapted portions.
+
+## Contributing
+
+Issues and pull requests are welcome. Before submitting, run:
+
+```sh
+cargo fmt --all -- --check
+cargo check --locked
+cargo test --locked
+cargo clippy --locked -- -D warnings
+```
