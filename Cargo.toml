@@ -1,9 +1,9 @@
 [package]
 name = "tui-shimmer"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 authors = ["Vinh Nguyen <vinhnguyen2308@gmail.com>"]
-license = "MIT"
+license = "MIT AND Apache-2.0"
 description = "Shimmer text effect for terminal UIs."
 readme = "README.md"
 homepage = "https://github.com/vinhnx/tui-shimmer"
@@ -12,3 +12,5 @@ documentation = "https://docs.rs/tui-shimmer"
 
 [dependencies]
 ratatui = { version = "0.30", default-features = false }
+unicode-segmentation = "1.12"
+unicode-width = "0.2"

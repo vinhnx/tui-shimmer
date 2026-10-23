@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/tui-shimmer.svg)](https://crates.io/crates/tui-shimmer)
 [![Docs.rs](https://img.shields.io/badge/Docs.rs-documentation-informational)](https://docs.rs/tui-shimmer/latest/tui_shimmer/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: MIT and Apache-2.0](https://img.shields.io/badge/License-MIT%20%2B%20Apache--2.0-blue.svg)](#license)
 
 A shimmer text effect for [Ratatui](https://ratatui.rs/) terminal UIs.
 
@@ -36,17 +36,17 @@ fn draw_loading(f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
 }
 ```
 
-The shimmer phase is driven by an internal monotonic clock. The effect sweeps
-left-to-right every 2 seconds and loops automatically.
+The shimmer phase is driven by an internal monotonic clock. It waits 600 ms,
+sweeps left-to-right for one second, then rests until the next four-second cycle.
 
 ---
 
 ## API
 
-| Function                                                     | Use when                                                                             |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `shimmer_spans_with_style(text, base_style)`                 | Default. Phase derived from elapsed time.                                            |
-| `shimmer_spans_with_style_at_phase(text, base_style, phase)` | You control timing externally (game loop, manual tick, etc.). `phase` is `0.0..1.0`. |
+| Function                                                     | Use when |
+| ------------------------------------------------------------ | --- |
+| `shimmer_spans_with_style(text, base_style)`                 | Default. Phase derived from elapsed time. |
+| `shimmer_spans_with_style_at_phase(text, base_style, phase)` | You control timing externally (game loop, manual tick, etc.). `phase` is the normalized position in a four-second cycle (`0.0..1.0`). |
 
 Both return `Vec<Span<'static>>` -- render it directly in a `Paragraph` or
 compose with other `Line`/`Text` content.
@@ -93,7 +93,7 @@ fn main() -> io::Result<()> {
 
     let start = Instant::now();
     loop {
-        let phase = (start.elapsed().as_secs_f32() / 2.0).rem_euclid(1.0);
+        let phase = (start.elapsed().as_secs_f32() / 4.0).rem_euclid(1.0);
         terminal.draw(|f| {
             let area = Layout::default()
                 .direction(Direction::Vertical)
@@ -141,4 +141,11 @@ fn main() -> io::Result<()> {
 
 ## License
 
-MIT
+This crate contains MIT-licensed code and code adapted from OpenAI Codex under
+the Apache License 2.0. See [LICENSE](LICENSE), [LICENSE-APACHE](LICENSE-APACHE),
+and [NOTICE](NOTICE).
+
+The grapheme-aware shimmer sweep is adapted from OpenAI Codex's
+[`summary_shimmer.rs`](https://github.com/openai/codex/blob/71b38795d83f230206098b265c67707e1fb28769/codex-rs/tui/src/summary_shimmer.rs)
+(Copyright 2025 OpenAI). This adaptation uses this crate's phase-driven API, color
+handling, and fallback behavior.
