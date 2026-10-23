@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## 0.1.7
+- Restructure the README around the project overview, quick start, usage, integration, and contributor guides.
+
 ## 0.1.6
 - Clarify OpenAI Codex attribution and licensing for the adapted shimmer code.
 - Link the README to the maintained VT Code project and refresh its integration demo.

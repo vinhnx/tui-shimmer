@@ -1,6 +1,6 @@
 [package]
 name = "tui-shimmer"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 authors = ["Vinh Nguyen <vinhnguyen2308@gmail.com>"]
 license = "MIT AND Apache-2.0"
